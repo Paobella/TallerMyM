@@ -798,8 +798,8 @@ progress {
   width: 100%;
   padding-right: calc(var(--bs-gutter-x) * 0.5);
   padding-left: calc(var(--bs-gutter-x) * 0.5);
-  margin-right: auto;
-  margin-left: auto;
+  margin-right: 300px;
+  margin-left: 300px;
 }
 
 @media (min-width: 576px) {
@@ -8237,6 +8237,9 @@ textarea.form-control-lg {
 
 .ms-5 {
   margin-left: 3rem !important;
+}
+.ms-6 {
+  margin-left: 60rem !important;
 }
 
 .ms-auto {

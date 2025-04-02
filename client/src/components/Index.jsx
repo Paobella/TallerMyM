@@ -24,7 +24,8 @@ const Index = () => {
             <hr className="divider" />
           </div>
           <div className="col-lg-8 align-self-baseline">
-            <p className="text-white-75 mb-5">Donde cada vehículo recibe el cuidado y la atención que necesita para seguir rodando con repuestos originales y de alta calidad, para asegurar que tu vehículo siempre funcione al máximo rendimiento, sin comprometer tu confianza.</p>
+            <h4 className="text-white font-weight-bolder">Donde cada vehículo recibe el cuidado y la atención que necesita para seguir rodando con los
+              puestos originales y de alta calidad, para asegurar que tu vehículo siempre funcione al máximo rendimiento, sin comprometer tu confianza.</h4>
           </div>
         </div>
       </div>

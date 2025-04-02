@@ -1,6 +1,6 @@
 import "../styles/custom.css";
 import React, { useState, useEffect } from "react";
-import Logo from "../assets/Logo.png";
+import Logo from "../assets/Logo1.png";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -44,11 +44,10 @@ const Header = () => {
 
   return (
     <nav className="navbar navbar-expand-lg fixed-top py-3" id="mainNav" style={{ backgroundColor: "#005aa3" }}>
-      <div className="container px-4 px-lg-5">
-        {/* Logo */}
-        <a className="navbar-brand d-flex align-items-center text-white" href="/">
-          <img src={Logo} alt="Logo Taller MyM" width="40" height="40" className="me-2" />
-          Taller MyM
+      <div className="container-fluid">
+          {/* Logo */}
+          <a className="ms-5">
+          <img src={Logo} alt="Logo Taller MyM" width="100" height="100" className="me-2" />
         </a>
         <button
           className={`navbar-toggler navbar-toggler-right ${isMenuOpen ? "collapsed" : ""}`}
@@ -65,7 +64,7 @@ const Header = () => {
 
         {/* Menú de navegación */}
         <div className={`collapse navbar-collapse ${isMenuOpen ? "show" : ""}`} id="navbarResponsive">
-          <ul className="navbar-nav mx-auto">
+          <ul className="navbar-nav ms-6">
             <li className="nav-item">
               <a className="nav-link text-white" href="/inventario">Inventario</a>
             </li>

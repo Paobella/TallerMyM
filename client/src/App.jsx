@@ -98,7 +98,7 @@ const App = () => {
           <Route path="/trabajadores-editar/:idTrabajador" element={<EditarTrabajador />} />
 
           {/* Ruta para perfil */}
-          <Route path="/perfil-crear" element={<CrearPerfil />} />
+          <Route path="/perfil-crear" element={<CrearPerfil/>} />
 
           {/* Rutas para clientes */}
           <Route path="/clientes/Index" element={<IndexCli />} />
