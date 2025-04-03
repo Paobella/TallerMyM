@@ -1,58 +1,67 @@
 const express = require('express');
-const sql = require('mssql');
-const { connectDB } = require('../../config/database');
-
+const pool = require('../../config/database');  // Asegúrate de que este path sea correcto
 const router = express.Router();
 
-// Obtener usuario por correo
-const getUsuarioByEmail = async (email) => {
-    const pool = await connectDB();
-    try {
-        const result = await pool.request()
-            .input('email', sql.NVarChar, email)
-            .query('SELECT * FROM USUARIO WHERE email = @email');
+// Endpoint para crear un usuario
+router.post('/api/create-profile', async (req, res) => {
+  const { nombre, apellidos, correo, telefono, cedula, rol } = req.body;
 
-        return result.recordset.length > 0 ? result.recordset[0] : null;
-    } catch (error) {
-        console.error('Error en la consulta de usuario por correo:', error);
-        throw new Error('Error al acceder a la base de datos');
-    } finally {
-        pool.close();
-    }
-};
+  // Validación básica: todos los campos son requeridos
+  if (!nombre || !apellidos || !correo || !telefono || !cedula || !rol) {
+    return res.status(400).json({ error: 'Todos los campos son requeridos' });
+  }
 
-// Ruta para obtener usuario por email
-router.get('/get-by-email/:email', async (req, res) => {
-    const { email } = req.params;
-    try {
-        const usuario = await getUsuarioByEmail(email);
-        if (usuario) {
-            res.json(usuario);
-        } else {
-            res.status(404).json({ message: 'Usuario no encontrado' });
-        }
-    } catch (error) {
-        res.status(500).json({ message: 'Error al obtener el usuario', error: error.message });
-    }
+  try {
+    const query = `
+      INSERT INTO Usuarios (nombre, apellidos, correo, telefono, cedula, rol)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `;
+    const [result] = await pool.execute(query, [nombre, apellidos, correo, telefono, cedula, rol]);
+    res.status(201).json({
+      message: 'Perfil creado correctamente',
+      insertId: result.insertId
+    });
+  } catch (err) {
+    console.error('Error al insertar el perfil:', err);
+    res.status(500).json({ error: 'Error interno del servidor. No se pudo crear el perfil.' });
+  }
 });
 
-// Ruta para enviar correo
-router.post('/send-email', async (req, res) => {
-    try {
-        const { email, nombreUsuario, message } = req.body;
+// Endpoint para obtener usuarios con búsqueda opcional por nombre
+router.get('/api/users', async (req, res) => {
+  try {
+    const { search } = req.query;
+    let query = "SELECT * FROM Usuarios";
+    let params = [];
 
-        if (!email || !nombreUsuario || !message) {
-            res.status(400).json({ message: 'Faltan datos requeridos' });
-            return;
-        }
-
-        console.log(`Enviando correo a ${email} con asunto "${nombreUsuario}"`);
-
-        res.json({ message: 'Correo enviado exitosamente' });
-    } catch (error) {
-        console.error('Error al enviar el correo:', error);
-        res.status(500).json({ message: 'Error al enviar el correo', error: error.message });
+    if (search) {
+      query += " WHERE nombre LIKE ?";
+      params.push(`%${search}%`);
     }
+
+    const [rows] = await pool.execute(query, params);
+    res.status(200).json(rows);
+  } catch (err) {
+    console.error('Error al obtener los usuarios:', err);
+    res.status(500).json({ error: 'Error al obtener los usuarios. Intenta más tarde.' });
+  }
+});
+
+// Endpoint para borrar un usuario por ID
+router.delete('/api/users/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [result] = await pool.execute("DELETE FROM Usuarios WHERE id = ?", [id]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "Usuario no encontrado" });
+    }
+    res.status(200).json({ message: "Usuario eliminado correctamente" });
+  } catch (err) {
+    console.error('Error al eliminar el usuario:', err);
+    res.status(500).json({ error: 'Error al eliminar el usuario. Intenta más tarde.' });
+  }
 });
 
 module.exports = router;
+

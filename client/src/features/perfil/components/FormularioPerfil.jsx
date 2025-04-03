@@ -1,96 +1,125 @@
-import React, { useState} from "react";
+import DefaultLayout from "@/layouts/default"; 
+import { Button } from "@headlessui/react"; // Alternativa si @heroui/button no existe
+import { Input } from "@radix-ui/react-input"; // Alternativa para Input
+import { useState, useEffect } from "react";
 
-const FormularioPerfil = ({ onSubmit }) => {
-  const [nombre, setNombre] = useState("");
-  const [email, setEmail] = useState("");
-  const [apellido, setApellido] = useState("");
-  const [role, setRole] = useState("");
-  const [isValidated, setIsValidated] = useState(false);
-  const [emailError, setEmailError] = useState("");
+export default function FormularioPerfil() {
+  const [users, setUsers] = useState([]);
+  const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-
-  const handleSubmit =  async (event) => {
-    event.preventDefault();
-
-  const form = event.target;
-
-    if (!form.checkValidity()) {
-      setIsValidated(true);
-      return;
-    }
-    
-
-    onSubmit({ email, nombre, apellido, role });
-  };
-
-  const checkEmail = async () => {
-    if(!email) return;
+  const fetchUsers = async () => {
+    setLoading(true);
+    setError(null);
     try {
-      const response = await fetch("http://localhost:3000/api/usuario/check-email", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email }),
-      });
+      const query = search ? `?search=${encodeURIComponent(search)}` : "";
+      const response = await fetch(`http://localhost:3000/api/users${query}`);
+
+      if (!response.ok) {
+        throw new Error(`Error al obtener usuarios: ${response.status}`);
+      }
 
       const data = await response.json();
-      if (response.status === 400) {
-        setEmailError(data.message || "El correo ya está registrado.");
-      } else {
-        setEmailError("");
+      setUsers(data);
+    } catch (err) {
+      console.error("Error al cargar usuarios:", err);
+      setError("Error al cargar usuarios");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, [search]);
+
+  const deleteUser = async (id) => {
+    try {
+      const res = await fetch(`http://localhost:3000/api/users/${id}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) {
+        throw new Error("Error al borrar el usuario");
       }
-    } catch (error) {
-      console.error("Error verificando el correo:", error);
+
+      fetchUsers();
+    } catch (err) {
+      console.error("Error al borrar el usuario:", err);
+      setError("No se pudo borrar el usuario");
     }
   };
 
   return (
-    <form className={`needs-validation ${isValidated ? "was-validated" : ""}`} noValidate onSubmit={handleSubmit}>
-      <div className="row g-3">
-        <div className="col-sm-6">
-          <label htmlFor="firstName" className="form-label">Nombre</label>
-          <input type="text" className="form-control" id="firstName" value={nombre} onChange={(e) => setNombre(e.target.value)} required />
-          <div className="invalid-feedback">Ingrese un nombre válido.</div>
-        </div>
+    <DefaultLayout>
+      <section className="flex flex-col items-center justify-center p-4">
+        <div className="w-full max-w-5xl rounded-xl shadow-md p-6">
+          <h1 className="text-3xl font-semibold text-center mb-6">
+            Listado de Usuarios
+          </h1>
 
-        <div className="col-sm-6">
-          <label htmlFor="lastName" className="form-label">Apellidos</label>
-          <input type="text" className="form-control" id="lastName" value={apellido} onChange={(e) => setApellido(e.target.value)} required />
-          <div className="invalid-feedback">Ingrese apellidos válidos.</div>
-        </div>
-
-        <div className="col-12">
-          <label htmlFor="email" className="form-label">Correo</label>
-          <input type="email" className="form-control" id="email" value={email} onChange={(e) => setEmail(e.target.value)} onBlur={checkEmail} required />
-          <div className="invalid-feedback">Ingrese un correo válido.</div>
-          {emailError && <div className="invalid-feedback d-block">{emailError}</div>}
-        </div>
-      </div>
-
-      <h4 className="mb-3">Rol</h4>
-      <div className="my-3">
-        {["Mecánico", "Cliente", "Gerente", "Director", "Sector Financiero"].map((r) => (
-          <div className="form-check" key={r}>
-          <input
-              id={`role${r}`}
-              name="role"
-              type="radio"
-              className="form-check-input"
-              value={r}
-              checked={role === r}
-              onChange={(e) => setRole(e.target.value)}
-              required
+          <div className="mb-4">
+            <Input
+              name="search"
+              placeholder="Buscar por nombre..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
             />
-            <label className="form-check-label" htmlFor={`role${r}`}>
-              {r}
-            </label>
           </div>
-        ))}
-      </div>
 
-      <hr className="my-4" />
-      <button className="w-100 btn btn-primary btn-lg" type="submit">Crear perfil</button>
-    </form>
+          {loading && <p>Cargando usuarios...</p>}
+          {error && <p className="text-red-500">{error}</p>}
+
+          {!loading && !error && (
+            <div className="overflow-x-auto">
+              <table className="min-w-full border-collapse">
+                <thead>
+                  <tr>
+                    <th className="border px-4 py-2">ID</th>
+                    <th className="border px-4 py-2">Nombre</th>
+                    <th className="border px-4 py-2">Apellidos</th>
+                    <th className="border px-4 py-2">Correo</th>
+                    <th className="border px-4 py-2">Teléfono</th>
+                    <th className="border px-4 py-2">Cédula</th>
+                    <th className="border px-4 py-2">Rol</th>
+                    <th className="border px-4 py-2">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {users.length === 0 ? (
+                    <tr>
+                      <td className="border px-4 py-2 text-center" colSpan={8}>
+                        No se encontraron usuarios.
+                      </td>
+                    </tr>
+                  ) : (
+                    users.map((user) => (
+                      <tr key={user.id}>
+                        <td className="border px-4 py-2">{user.id}</td>
+                        <td className="border px-4 py-2">{user.nombre}</td>
+                        <td className="border px-4 py-2">{user.apellidos}</td>
+                        <td className="border px-4 py-2">{user.correo}</td>
+                        <td className="border px-4 py-2">{user.telefono}</td>
+                        <td className="border px-4 py-2">{user.cedula}</td>
+                        <td className="border px-4 py-2">{user.rol}</td>
+                        <td className="border px-4 py-2">
+                          <Button
+                            onClick={() => deleteUser(user.id)}
+                            className="bg-red-500 text-white px-2 py-1 rounded"
+                          >
+                            Borrar
+                          </Button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </section>
+    </DefaultLayout>
   );
-};
-
-export default FormularioPerfil;
+}
